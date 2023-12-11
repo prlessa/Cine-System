@@ -2,72 +2,23 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct cat{
+typedef struct cine{
     char Nome[20];
     int sala; 
     int hora;
     int min;
     int lotacao;
     int LOTMAX;
-    struct cat *proxno;
+    struct cine *proxno;
 } NO;
 
 typedef struct cliente{
     char nome[20];
-    struct cat *ingresso;
+    struct cine *ingresso;
 } USU;
 
-
-/*void cadastra_cliente(USU **c, char nome[20]){
-    USU *aux, *c1 = malloc(sizeof(USU));
-
-    if (c1) {
-        //p1->Nome = nome; Em C, você não pode atribuir diretamente um array a outro. Você precisa copiar cada elemento individualmente.
-        strcpy(c1->nome, nome);
-        
-        printf("| Cliente cadastrado! | \n");
-        if (*c == NULL) {
-            *c = c1;
-        } 
-        else {
-            aux = *c;
-            while(aux->prox){
-                aux = aux->prox;
-            }
-            aux->prox = c1;
-        }   
-    } else {
-        printf("| Erro ao alocar memoria! |");
-    }
-}*/
-/*void cadastra_cliente(USU **c, char nome[20]){
-    USU *c1 = malloc(sizeof(USU));
-
-    if (c1) {
-        //p1->Nome = nome; Em C, você não pode atribuir diretamente um array a outro. Você precisa copiar cada elemento individualmente.
-        strcpy(c1->nome, nome);
-        *c = c1;
-        printf("| Cliente cadastrado! | \n");
-    }
-}*/
-
-
-void compra_ingresso(NO *p, USU *c, char nome[20], int sala){
-    if ( p == NULL){
-        return(0);
-    } else {
-        do {
-        if (p->Nome == nome && p->sala == sala){
-            c->ingresso = p;
-            p->lotacao += 1;
-            return(1);
-        } else{
-            p = p->proxno;
-        }
-            
-        } while ( p != NULL );
-    return(0);
-} } 
+NO *primeiro_no = NULL;
+USU *primeiro_cliente = NULL;
 
 void cadastra_cliente(USU *c, char *nome) {
     strcpy(c->nome, nome);
@@ -145,33 +96,85 @@ void lista_salas(NO *p) {
 }
 
 void lista_filmes ( NO *p ) {
-        printf(" CATALOGO DE FILMES \n\t");
+        printf(" CATALOGO DE FILMES \n");
         printf("____________________\n");
     while (p != NULL) {
         
         if (p->sala != NULL) {
         
-        printf("|-%s          \n\t", p->Nome);
+        printf("|-%s          \n", p->Nome);
         printf("____________________\n");
         }
 
         p = p->proxno;
     } 
 }
-void imprimir_ingresso(USU *c) {
-    struct cat *ingresso = c->ingresso;
-    printf("Nome: %s\n", ingresso->Nome);
-    printf("Sala: %d\n", ingresso->sala);
-    printf("Hora: %d:%d\n", ingresso->hora, ingresso->min);
-    printf("Lotação: %d/%d\n", ingresso->lotacao, ingresso->LOTMAX);
+
+void compra_ingresso(NO **p, char nome[20], int sala){
+    NO *aux = *p;
+
+    while(aux != NULL){
+        if (encontra_sessao(aux,strcmp(aux->Nome, nome), sala)){
+        primeiro_cliente->ingresso = aux;
+        } else {
+                aux = aux->proxno;
+            }
+    }
 }
-void menu_Funcionario(NO **p){
+/*int compra_ingresso(NO *p, USU *c, char nome[20], int sala){
+    NO *aux = malloc(sizeof(NO));
+    aux = p;
+    if (aux == NULL){
+        return 0;
+    } else {
+        while (aux != NULL) {
+            if (strcmp(aux->Nome, nome) == 0 && aux->sala == sala){
+                c->ingresso = aux;
+               // aux->lotacao += 1;
+            } else{
+                aux = aux->proxno;
+            }
+        }
+    }
+    return 0;
+}*/
+/*void compra_ingresso(NO *p, char nome[20], int sala) {
+    NO *aux = NULL;
+    aux = p;
+    USU *primeiro_cliente = NULL;
+    while(aux != NULL) {
+        if (strcmp(aux->Nome, nome) == 0 && aux->sala == sala) {
+            primeiro_cliente->ingresso = aux;
+        } else{
+            aux = aux->proxno;
+        }
+    }
+}*/
+
+int encontra_sessao(NO *p, char nome[20], int sala) {
+    if ( p == NULL){
+       return(0); 
+    } else {
+            do {
+                if (strcmp(p->Nome, nome) == 0 && p->sala == sala) {
+                primeiro_cliente->ingresso = p;
+                return(1);
+                }
+            } while ( p != NULL );
+        } 
+} 
+
+
+
+void imprimir_ingresso(USU *c) {
+    printf("Nome: %s\nSala: %d\nHora: %02d:%02d\nLotacao: %d/%d\n", c->ingresso->Nome, c->ingresso->sala, c->ingresso->hora, c->ingresso->min, c->ingresso->lotacao, c->ingresso->LOTMAX);
+}
+
+void menu_Funcionario(){
         int in;
         char nome[20];
         int sala, hora, min;
-        
-
-        NO *p1 = NULL; 
+    
         do{
             printf(" Cine SyStem - Funcionario\n");
             printf("___________________________\n");
@@ -187,8 +190,7 @@ void menu_Funcionario(NO **p){
                 case 1:                         
                         printf("Filme: ");
                         fgets(nome, sizeof(nome), stdin);
-                        //nome[strcspn(nome, "\n")] = 0;  
-                        getchar();
+                        nome[strcspn(nome, "\n")] = 0;  
                         printf("Sala: ");
                         scanf("%d", &sala);
                         getchar();
@@ -198,26 +200,26 @@ void menu_Funcionario(NO **p){
                         printf("Minuto:");
                         scanf("%d", &min);
                         getchar();                        
-                        adiciona_filme(&p1,nome,sala,hora,min);
+                        adiciona_filme(&primeiro_no,nome,sala,hora,min);
                         printf("Ta certo isso?");
                         break;
                 
                 case 2: 
                         printf("Nome do filme: ");
-                        scanf("%s", &nome);
+                        fgets(nome, sizeof(nome), stdin);
                         getchar();
                         printf("Sala: ");
                         scanf("%d", &sala);
                         getchar();
-                        remove_filme(&p1, nome, sala);
+                        remove_filme(&primeiro_no, nome, sala);
                         break;
                
                 case 3: 
-                        lista_salas(p1);
+                        lista_salas(primeiro_no);
                         break;
                 
                 case 4: 
-                        lista_filmes(p1);
+                        lista_filmes(primeiro_no);
                         break;
             }
 
@@ -226,17 +228,17 @@ void menu_Funcionario(NO **p){
         
 }
 
-void menu_Cliente(NO **p ,USU **c){
-        int in, sala;
-        char nome[20];
-        char filme[20];
-        NO *p1 = NULL;
-        USU *c1 = NULL;
-        p = malloc(sizeof(NO));
-        //c = malloc(sizeof(USU));
-        do{
+void menu_Cliente(){
+    int in, sala;
+    char nome[20];
+    char nome_cliente[20];
 
-        
+    USU *primeiro_cliente = (USU*) malloc(sizeof(USU));
+        printf("Nome Cliente: ");
+        fgets(nome_cliente, sizeof(nome_cliente), stdin);
+        getchar();
+        strcpy(primeiro_cliente->nome, nome_cliente);
+    do{
         printf("Cine SyStem - Cliente\n");
         printf("----------------\n");
         printf("1 - Comprar Ingressos\n");
@@ -245,50 +247,42 @@ void menu_Cliente(NO **p ,USU **c){
         printf("4 - Listar Filmes\n");
         printf("5 - Sair \n");
         scanf("%d", &in);
-
+        getchar();
         switch(in){
-                case 1:
-                        printf("  Cine SyStem - Cliente\n");
-                        printf("__________________________\n");
-                        printf("Nome Cliente: ");
-                    //    fgets(nome, sizeof(nome), stdin);                       
-                    //    getchar();
-                    //    cadastra_cliente(c1,nome);
+            case 1:
+                printf("  Cine SyStem - Cliente\n");
+                printf("__________________________\n");
+
+                
                         printf("Filme: ");
-                        fgets(filme, sizeof(filme), stdin);
-                        getchar();
-                        printf("Sala:");
+                        fgets(nome, sizeof(nome), stdin);
+                        nome[strcspn(nome, "\n")] = 0;  
+                        printf("Sala: ");
                         scanf("%d", &sala);
                         getchar();
-                        printf("Antes cadastra cliente\n");
-                        
-                        printf("Antes compra ingresso\n");
-                        compra_ingresso(p1,c1,filme,sala);
-                        printf("Antes do break\n");
-                        break;
-                case 2:
-                        printf("_____________________________\n");
-                        imprimir_ingresso(c1);
-                        printf("_____________________________\n");
-                case 3: 
-                        lista_salas(p1);
-                        break;
-                case 4: 
-                        lista_filmes(p1);
-                        break;
+                compra_ingresso(&primeiro_no, nome, sala);
+                printf("Filme: %s Sala: %d Horario: %d:%d", primeiro_cliente->ingresso->Nome, primeiro_cliente->ingresso->sala, primeiro_cliente->ingresso->hora, primeiro_cliente->ingresso->min);
+                printf("Compra sucedida! Volte sempre!");
+                in = 5;
+                break;
+            case 2:
+                printf("_____________________________\n");
+                imprimir_ingresso(primeiro_cliente);
+                printf(" %s", primeiro_cliente->nome);
+                printf("_____________________________\n");
+                break;
+            case 3: 
+                lista_salas(primeiro_no);
+                break;
+            case 4: 
+                lista_filmes(primeiro_no);
+                break;
         }
 
-        } while(in != 5);
+    } while(in != 5);
 }
 
 main(){
-
-    NO *p = NULL;
-    USU *c = NULL;
-    char nome[20];
-
-    p = malloc(sizeof(NO));
-    c = malloc(sizeof(USU));
     int in;
     do{
     printf(" ____________________\n");
@@ -302,14 +296,10 @@ main(){
     getchar();
         switch(in){
             case 1:
-                printf("Nome Cliente: ");
-                fgets(nome, sizeof(nome), stdin);
-                getchar();
-                cadastra_cliente(c, nome);
-                menu_Cliente(p,c);
+                menu_Cliente();
                 break;
             case 2:
-                menu_Funcionario(p);
+                menu_Funcionario();
                 break;
         }   
     } while(in != 3);
